@@ -1,9 +1,9 @@
 /*
  * agri-temp-poe — DS18B20 multi-point 1-Wire temperature node on
- *                 M5Stack AtomS3 Lite + Atom PoE Base (W5500 Ethernet).
+ *                 M5Stack AtomS3 Lite + Atomic PoE Base (W5500 Ethernet).
  *
  * A PoE derivative of agri-temp-wifi. That node was WiFi only because the
- * ATOM U has no PoE base; the AtomS3 Lite *does* sit on the Atom PoE base, so
+ * ATOM U has no PoE base; the AtomS3 Lite *does* sit on the Atomic PoE base, so
  * this node joins the wired -poe family and is built on agri-node-poe-core
  * (W5500 / MQTT / UECS-CCM / WebUI / mDNS / OTA), exactly like agri-env-poe.
  * The valuable part carried over from agri-temp-wifi is the DS18B20 SLOT MODEL
@@ -15,8 +15,7 @@
  *   - ROM-address -> slot binding                              config.h/sensors.h
  *   - status LED on G35 (AtomS3 Lite, not the core's G27)            led.h
  *
- * Hardware / wiring: see README. The one thing to VERIFY before first boot is
- * the W5500 SPI pin mapping for the AtomS3 on the Atom PoE base (below).
+ * Hardware / wiring: see README.
  */
 #include <Arduino.h>
 #include <time.h>
@@ -38,21 +37,21 @@ const char *FW_REPO     = "yasunorioi/agri-temp-poe";
 const char *FW_BIN_NAME = "agri-temp-poe.bin";
 
 // ===========================================================================
-// W5500 pins on the Atom PoE base.
+// W5500 pins on the Atomic PoE Base, for the AtomS3 / AtomS3 Lite.
 //
-// ⚠ VERIFY FOR AtomS3 BEFORE FIRST BOOT. The core's default W5500Pins
-// (SCK=22 MISO=23 MOSI=33 CS=19) are the *classic* ATOM's bottom-header GPIOs —
-// documented by M5 only for the classic ATOM (docs.m5stack.com/en/atom/atom_poe),
-// and on the ESP32-S3 those GPIO numbers don't even exist as free pins (26-37
-// are the embedded flash/PSRAM). The AtomS3 Lite breaks out G5/G6/G7/G8/G38/G39
-// on the bottom header, so the base's W5500 must land on four of those.
+// These are NOT the core's default W5500Pins (SCK=22 MISO=23 MOSI=33 CS=19) —
+// those are the *classic* ATOM's bottom-header GPIOs, and on the ESP32-S3 they
+// don't exist as free pins (26-37 are the embedded flash/PSRAM). The AtomS3
+// breaks out G5/G6/G7/G8/G38/G39 on the bottom header and the Atomic PoE Base
+// (K139, "Compatible with Atom-Lite/Atom-Matrix/AtomS3/AtomS3-Lite") lands its
+// W5500 SPI on four of them:
 //
-// The values below are a best estimate and MUST be confirmed against the
-// AtomS3 schematic / the base, or by bringing it up on the bench (no DHCP lease
-// = wrong pins; there is no auto-probe fallback for SPI like there is for the
-// 1-Wire pin). Override here and rebuild — this is the single point of truth.
-// (Defined as build_flags in platformio.ini so it can be flipped without
-// editing source; the fallbacks here keep the file self-contained.)
+//   SCK=G5  CS=G6  MISO=G7  MOSI=G8   (no reset/interrupt line -> rst=irq=-1)
+//
+// Confirmed against a known-good m5stack-atoms3 + W5500 config (clk05/cs06/
+// miso07/mosi08). Passed via build_flags in platformio.ini so they can be
+// changed without editing source; the fallbacks here keep the file
+// self-contained.
 // ===========================================================================
 #ifndef W5500_SCK
 #define W5500_SCK  5

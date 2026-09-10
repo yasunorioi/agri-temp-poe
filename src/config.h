@@ -1,6 +1,6 @@
 // config.h — agri-temp-poe NVS-backed config ("tempp-cfg").
 //
-// PoE member of the agri-* family: AtomS3 Lite + M5 Atom PoE Base (W5500).
+// PoE member of the agri-* family: AtomS3 Lite + M5 Atomic PoE Base (W5500).
 // Network / MQTT / UECS-CCM envelope come from agri-node-poe-core's
 // CommonConfig; this struct adds the 1-Wire bus settings and the DS18B20
 // SLOT MODEL carried over from agri-temp-wifi.

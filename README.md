@@ -1,10 +1,10 @@
 # agri-temp-poe
 
-M5Stack **AtomS3 Lite** ＋ **Atom PoE Base（W5500）** ＋ **DS18B20 × N**（1-Wire マルチドロップ）
+M5Stack **AtomS3 Lite** ＋ **Atomic PoE Base（K139, W5500）** ＋ **DS18B20 × N**（1-Wire マルチドロップ）
 の多点温度ノード。`agri-*` ファミリーの **PoE 機**。既定は house2 の水温（`WaterTemp`）。
 
 `agri-temp-wifi` の **PoE 派生**。あちらが WiFi だったのは ATOM U に PoE ベースが
-履けないからで、**AtomS3 Lite は Atom PoE ベースに載る**ため、この機は他の
+履けないからで、**AtomS3 Lite は Atomic PoE ベースに載る**ため、この機は他の
 `-poe` ノード（env / rain / flow / solar）と同じく **`agri-node-poe-core`** の上に立つ。
 持ち込んだ資産は `agri-temp-wifi` の核心 = **DS18B20 のスロットモデル**
 （`config.h` / `sensors.h`）。
@@ -38,18 +38,21 @@ AtomS3 Grove ポート (HY2.0-4P)      Grove DS18B20 ユニット
   ロジック電圧側に付いており、G2 に過電圧は乗らない設計）。
 - 追加プローブが要るなら Grove 分岐で同一バスにマルチドロップ可（スター配線は避ける）。
 
-### ⚠ W5500（PoE ベース）のピンは AtomS3 用に要確定
+### W5500（Atomic PoE Base）のピン
 
 `agri-node-poe-core` の W5500 デフォルト（SCK=22 / MISO=23 / MOSI=33 / CS=19）は
-**旧 ATOM の底面ピン**で、M5 公式も旧 ATOM でしか記載していない
-（docs.m5stack.com/en/atom/atom_poe）。**ESP32-S3 ではこれらの GPIO は自由に使えない**
-（26–37 は内蔵フラッシュ/PSRAM）。AtomS3 Lite の底面ヘッダは **G5/G6/G7/G8/G38/G39** で、
-PoE ベースの W5500 はこのうち 4 本に落ちる。
+**旧 ATOM の底面ピン**で、ESP32-S3 では使えない（26–37 は内蔵フラッシュ/PSRAM）。
+Atomic PoE Base（K139、"Compatible with … AtomS3/AtomS3-Lite"）は AtomS3 の底面ヘッダ
+**G5/G6/G7/G8** に W5500 SPI を落とす:
 
-`platformio.ini` の `-DW5500_*` build フラグで渡している（既定 `SCK=5 MISO=7 MOSI=8 CS=6`）。
-**これは暫定の当て推量**なので、**初回起動前に AtomS3 の回路図 or 実機で確定**すること。
-1-Wire ピンと違い SPI には自動探索フォールバックが無い（**DHCP を取れない＝ピンが違う**）。
-確定値が分かったら build フラグ 1 か所を直して焼き直す。
+```
+SCK = G5    CS = G6    MISO = G7    MOSI = G8    (reset/interrupt 無し = -1)
+```
+
+`platformio.ini` の `-DW5500_*` build フラグで渡している。実績のある m5stack-atoms3 +
+W5500 構成（clk05/cs06/miso07/mosi08）と一致。別のベース/配線に変えるならここを直す。
+1-Wire ピンと違い SPI には自動探索フォールバックが無いので、**DHCP を取れない＝ピンか
+配線を疑う**。
 
 ---
 
@@ -119,10 +122,16 @@ cd C:\Users\kita_\Documents\agri-temp-poe
 
 1. USB で焼く → PoE で給電（PoE ハブ / インジェクタ）
 2. DHCP で IP 取得（LED: 青=boot → 赤=リンク無し/リース無し → 緑=OK）
-   - **緑にならない/赤のまま**なら、まず **W5500 ピン**（上記⚠）を疑う
+   - **緑にならない/赤のまま**なら W5500 の配線を疑う（上記ピン節）
 3. `http://agri-temp-poe-01.local/` を開く
 4. `/config` で MQTT Host（`yasu-hp.local`）とスロットを設定
 5. Dashboard に温度 → broker で `agriha/2/sensor/WaterTemp` を確認
+
+> **複数台（4台）を立ち上げるとき**: 既定の hostname / node_id は全台
+> `agri-temp-poe-01` / `temp_poe_01` で同じ。同一 LAN に同時投入すると mDNS 名衝突＋
+> MQTT client-id 衝突（同じ node_id だと broker がどちらかを蹴る）になる。
+> **1台ずつ焼いて `/config` で hostname と node_id を一意に**（例 `-01`〜`-04`）
+> してから次を繋ぐこと。ハウス割り当て（トピック prefix）は既定 house2 のままでよい。
 
 ### 状態 LED（G35）
 
@@ -159,7 +168,7 @@ gh release create v0.1.0 agri-temp-poe.bin --title "v0.1.0" --notes "..."
 
 ## 残作業
 
-- **W5500 の AtomS3 ピンを確定**（上記⚠）。DHCP を取れれば正しい。
 - 実機での **ビルド確認**（このリポジトリは未ビルド。ファミリー共通の pioarduino fork 前提）。
+- 4台それぞれに **一意の hostname / node_id** を付与（初回セットアップの注記参照）。
 - 実プローブでの ROM ↔ 実体の対応付け（1本ずつ握って Dashboard で確認）。
 - CCM を使うなら yasu-hp の bridge に `sender_override` を1行追加。
