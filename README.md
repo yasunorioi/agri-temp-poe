@@ -140,6 +140,21 @@ pio run -e m5atoms3-poe -t upload  # USB 書き込み(初回のみ)。ポート�
 > **1台ずつ焼いて `/config` で hostname と node_id を一意に**（例 `-01`〜`-04`）
 > してから次を繋ぐこと。ハウス割り当て（トピック prefix）は既定 house2 のままでよい。
 
+### LAN に載せられないとき（SoftAP フォールバック）
+
+DHCP リースが取れない状態（ケーブル未接続 / LAN に DHCP が無い / 開封直後で
+IP が不明）が起動後 ~15 秒続くと、自動で **provisioning SoftAP** が立つ
+（core `AgriProvisionAP`）。Ethernet でリースを取ると自動で落ちる。
+
+1. スマホ/PC の WiFi で SSID **`agri-temp-poe-01`**（= hostname）に接続
+   - パスワード: **`agrinode`**（WPA2・全台共通。ビルド時 `-DAGRI_AP_PASSWORD=\"...\"` で変更可）
+2. captive portal が自動で `/config` を開く（開かなければ `http://192.168.4.1/`）
+3. hostname（= mDNS 名）/ MQTT Host 等を設定して Save
+4. Ethernet を繋ぎ直すと SoftAP は自動停止、`http://<新 hostname>.local/` へ
+
+> 有線と同じ `AgriWebUI` をそのまま AP 上に出しているだけなので、設定項目は
+> `/config` と完全に同一。W5500(SPI) と WiFi 無線はハード競合せず同時起動できる。
+
 ### 状態 LED（G35）
 
 `agri-node-poe-core` と同じ色分け（実装は `led.h`、pin だけ G35）:

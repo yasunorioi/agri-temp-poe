@@ -31,6 +31,7 @@
 #include <AgriCCM.h>
 #include <AgriOTA.h>
 #include <AgriWebUI.h>
+#include <AgriProvisionAP.h>
 
 #include "config.h"
 #include "sensors.h"
@@ -318,6 +319,10 @@ void loop() {
   agri::otaHandle();
   agri::OTA::poll();     // daily re-check; flashes only when /api/update armed it
   agri::WebUI::handle(agri::Network::link_up, agri::Network::have_lease);
+  // No DHCP lease for a grace period (cable out / no LAN / just-unboxed) -> raise
+  // a WPA2 SoftAP (SSID = hostname) serving this same WebUI so the node can be
+  // configured wirelessly. Torn down automatically once Ethernet gets a lease.
+  agri::ProvisionAP::poll(agri::Network::have_lease, g_cfg.common.hostname);
 
   uint32_t now = millis();
 
