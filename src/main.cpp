@@ -20,7 +20,17 @@
 #include <Arduino.h>
 #include <time.h>
 #include <ArduinoJson.h>
-#include <AgriNode.h>
+// Include the core headers individually rather than <AgriNode.h>: that umbrella
+// also pulls AgriLED.h, whose begin() hardcodes FastLED.addLeds<WS2812, 27>,
+// and GPIO27 is an invalid pin on the ESP32-S3 — its compile-time static_assert
+// fails the build even though this node never uses agri::Led (it drives its own
+// G35 LED in led.h). AgriOTA.h must precede AgriWebUI.h (the latter uses OTA::).
+#include <AgriCommonConfig.h>
+#include <AgriNetwork.h>
+#include <AgriMQTT.h>
+#include <AgriCCM.h>
+#include <AgriOTA.h>
+#include <AgriWebUI.h>
 
 #include "config.h"
 #include "sensors.h"

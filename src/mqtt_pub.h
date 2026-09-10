@@ -15,7 +15,7 @@
 
 #include <Arduino.h>
 #include <time.h>
-#include <AgriNode.h>
+#include <AgriMQTT.h>   // not <AgriNode.h>: avoid AgriLED.h's G27 addLeds (invalid on S3)
 #include "config.h"
 #include "sensors.h"
 

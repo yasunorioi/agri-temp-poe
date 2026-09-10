@@ -16,7 +16,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <AgriNode.h>
+#include <AgriCCM.h>    // not <AgriNode.h>: avoid AgriLED.h's G27 addLeds (invalid on S3)
 #include "config.h"
 #include "sensors.h"
 
