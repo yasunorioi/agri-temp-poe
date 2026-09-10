@@ -102,21 +102,36 @@ agriha/2/sys/temp_poe_01/online   1 / 0  (LWT, retain — core が付与)
 
 ## ビルド / 書き込み
 
-```powershell
-$env:PYTHONIOENCODING="utf-8"
-cd C:\Users\kita_\Documents\agri-temp-poe
-& "C:\Users\kita_\.platformio\penv\Scripts\pio.exe" run -e m5atoms3-poe
-& "C:\Users\kita_\.platformio\penv\Scripts\pio.exe" run -e m5atoms3-poe -t upload
+`pio` を PATH に通せば **Windows / Linux 同一コマンド**（`platformio.ini` は OS 非依存、
+`upload_port` 未指定＝自動検出）:
+
+```bash
+pio run -e m5atoms3-poe            # ビルド
+pio run -e m5atoms3-poe -t upload  # USB 書き込み(初回のみ)。ポートは自動検出
 ```
 
 - **`agri-node-poe-core` と同じ pioarduino fork**（arduino-esp32 3.x。W5500 の
   `ETH.begin(ETH_PHY_W5500, …)` が要る）。
-- AtomS3 Lite は USB-UART チップが無く、Serial は **ESP32-S3 ネイティブ USB CDC**。
-  `-DARDUINO_USB_CDC_ON_BOOT=1`（旧 ATOM 機は 0）。
-- USB 書き込みは初回だけ。以後は Ethernet 経由 OTA:
-  ```powershell
-  curl.exe -F firmware=@.pio\build\m5atoms3-poe\firmware.bin http://agri-temp-poe-01.local/api/ota
+- AtomS3 Lite は USB-UART チップが無く、Serial は **ESP32-S3 ネイティブ USB CDC**
+  （VID 0x303a）。`-DARDUINO_USB_CDC_ON_BOOT=1`（旧 ATOM 機は 0）。
+- USB 書き込みは初回だけ。以後は Ethernet 経由 OTA（`curl` は Win では `curl.exe`）:
+  ```bash
+  curl -F firmware=@.pio/build/m5atoms3-poe/firmware.bin http://agri-temp-poe-01.local/api/ota
   ```
+
+### Linux で初めてビルドする場合
+
+- `pio` 導入: `pipx install platformio`（または VSCode PlatformIO 拡張）
+- USB 書き込み権限（**PlatformIO 公式 udev rules**、推奨）:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules \
+    | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+  sudo udevadm control --reload-rules && sudo udevadm trigger
+  sudo usermod -a -G dialout $USER   # 反映には再ログイン
+  ```
+- **`~/.platformio`（toolchain 本体）は OS 別ネイティブなので Win と共有しない**。
+  共有するのはこのリポジトリだけ（`.pio/` は gitignore 済み。初回は toolchain を
+  数百 MB DL する）。
 
 ## 初回セットアップ
 
@@ -158,13 +173,15 @@ core の `AgriOTA` を直接使用（wifi 機の自前 `self_update.h` は不要
 Release を確認し、新しければ Dashboard にバナー＋「Update」。押すと `/api/update` で予約し
 次の `poll()` で焼いて再起動。
 
-```powershell
-& "...\pio.exe" run -e m5atoms3-poe
-Copy-Item .pio\build\m5atoms3-poe\firmware.bin agri-temp-poe.bin
-gh release create v0.1.0 agri-temp-poe.bin --title "v0.1.0" --notes "..."
+```bash
+pio run -e m5atoms3-poe
+# asset 名は gh の path#name 記法で固定（Copy-Item 不要・Win/Linux 共通）
+gh release create v0.1.0 ".pio/build/m5atoms3-poe/firmware.bin#agri-temp-poe.bin" \
+  --title v0.1.0 --notes "..."
 ```
 
 - タグ = `v` + `FW_VERSION`（`main.cpp`）/ asset 名 = `agri-temp-poe.bin` と完全一致
+  （`#agri-temp-poe.bin` がこれを保証）
 
 ## 残作業
 
