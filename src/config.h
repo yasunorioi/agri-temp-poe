@@ -45,7 +45,7 @@ struct AppConfig {
   agri::CommonConfig common;
 
   // 1-Wire bus
-  uint8_t  ow_pin;                  // DATA pin (default G2 = AtomS3 Grove yellow)
+  uint8_t  ow_pin;                  // DATA pin (default G1 = AtomS3 Grove white)
   uint8_t  resolution;              // 9..12 bits (12 = 0.0625 C, 750 ms)
   uint16_t meas_interval_s;         // bus poll cadence
 
@@ -67,10 +67,13 @@ inline void setDefaults() {
                        /*mqtt prefix = house scope*/ "agriha/2",
                        /*default_ccm_region = 別棟 ArSprout region*/ 13);
 
-  // Grove yellow (SIG) on AtomS3 Lite = G2 (white = G1). The Grove DS18B20
-  // unit has a built-in pull-up, so no external 4.7k is needed — unlike the
-  // bare probes on agri-temp-wifi. See README "配線".
-  g_cfg.ow_pin          = 2;
+  // DATA on this Grove DS18B20 unit (Switch Science 10979) comes out on the
+  // WHITE wire = G1, not the yellow/SIG = G2 the silkscreen would suggest —
+  // verified on hardware (a probe enumerated on G1 and read 24 C; G2 found
+  // nothing). The unit has a built-in pull-up, so no external 4.7k is needed —
+  // unlike the bare probes on agri-temp-wifi. Editable in /config (re-inits the
+  // bus with no reboot). See README "配線".
+  g_cfg.ow_pin          = 1;
   g_cfg.resolution      = 12;
   g_cfg.meas_interval_s = 10;
 
