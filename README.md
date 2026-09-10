@@ -119,19 +119,11 @@ pio run -e m5atoms3-poe -t upload  # USB 書き込み(初回のみ)。ポート�
   curl -F firmware=@.pio/build/m5atoms3-poe/firmware.bin http://agri-temp-poe-01.local/api/ota
   ```
 
-### Linux で初めてビルドする場合
+> 🛠 **ビルド環境（Windows / Linux 共用）・Linux 初回セットアップ（udev / pipx /
+> `~/.platformio` を共有しない件）** → フリート共通の一次情報を参照:
+> [agri-node-poe-core/docs/cross-platform-build.md](https://github.com/yasunorioi/agri-node-poe-core/blob/main/docs/cross-platform-build.md)
 
-- `pio` 導入: `pipx install platformio`（または VSCode PlatformIO 拡張）
-- USB 書き込み権限（**PlatformIO 公式 udev rules**、推奨）:
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules \
-    | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
-  sudo udevadm control --reload-rules && sudo udevadm trigger
-  sudo usermod -a -G dialout $USER   # 反映には再ログイン
-  ```
-- **`~/.platformio`（toolchain 本体）は OS 別ネイティブなので Win と共有しない**。
-  共有するのはこのリポジトリだけ（`.pio/` は gitignore 済み。初回は toolchain を
-  数百 MB DL する）。
+実測: RAM 11.1% / Flash 29.8%（994 KB、pioarduino fork = arduino-esp32 3.x）。
 
 ## 初回セットアップ
 
