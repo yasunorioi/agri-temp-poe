@@ -2,9 +2,9 @@
 
 [🇯🇵 日本語](README_ja.md) · **English**
 
-A multi-point temperature node built from an M5Stack **AtomS3 Lite** + **Atomic PoE Base (K139, W5500)** + **DS18B20 × N** (1-Wire multi-drop). The **PoE member** of the `agri-*` family. Default target is house 2 water temperature (`WaterTemp`).
+A multi-point temperature node built from an M5Stack [**AtomS3 Lite**](https://docs.m5stack.com/en/core/AtomS3%20Lite) + [**Atomic PoE Base (K139, W5500)**](https://docs.m5stack.com/en/atom/Atomic%20PoE%20Base) + **DS18B20 × N** (1-Wire multi-drop). The **PoE member** of the `agri-*` family. Default target is house 2 water temperature (`WaterTemp`).
 
-A **PoE derivative of `agri-temp-wifi`**. That node was WiFi only because the ATOM U cannot sit on a PoE base; the **AtomS3 Lite does sit on the Atomic PoE base**, so this node stands on **`agri-node-poe-core`** like the other `-poe` nodes (env / rain / flow / solar). What carried over from `agri-temp-wifi` is its core asset — the **DS18B20 slot model** (`config.h` / `sensors.h`).
+A **PoE derivative of `agri-temp-wifi`**. That node was WiFi only because the [ATOM U](https://docs.m5stack.com/en/core/ATOM%20U) cannot sit on a PoE base; the **AtomS3 Lite does sit on the Atomic PoE base**, so this node stands on **`agri-node-poe-core`** like the other `-poe` nodes (env / rain / flow / solar). What carried over from `agri-temp-wifi` is its core asset — the **DS18B20 slot model** (`config.h` / `sensors.h`).
 
 | | agri-temp-wifi | **agri-temp-poe** |
 |---|---|---|
@@ -19,7 +19,7 @@ A **PoE derivative of `agri-temp-wifi`**. That node was WiFi only because the AT
 
 ## Wiring
 
-Just plug the Grove unit (Switch Science 10979 / DS18B20 waterproof probe, 2 m cable, **built-in pull-up**) into the AtomS3 Grove port. **No external 4.7k needed** — the biggest difference from agri-temp-wifi.
+Just plug the Grove unit ([Switch Science 10979](https://www.switch-science.com/products/10979) / DS18B20 waterproof probe, 2 m cable, **built-in pull-up**) into the AtomS3 Grove port. **No external 4.7k needed** — the biggest difference from agri-temp-wifi.
 
 ```
 AtomS3 Grove port (HY2.0-4P)        Grove DS18B20 unit

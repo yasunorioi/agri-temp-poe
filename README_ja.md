@@ -2,10 +2,10 @@
 
 **日本語** · [🇬🇧 English](README_en.md)
 
-M5Stack **AtomS3 Lite** ＋ **Atomic PoE Base（K139, W5500）** ＋ **DS18B20 × N**（1-Wire マルチドロップ）
+M5Stack [**AtomS3 Lite**](https://docs.m5stack.com/en/core/AtomS3%20Lite) ＋ [**Atomic PoE Base（K139, W5500）**](https://docs.m5stack.com/en/atom/Atomic%20PoE%20Base) ＋ **DS18B20 × N**（1-Wire マルチドロップ）
 の多点温度ノード。`agri-*` ファミリーの **PoE 機**。既定は house2 の水温（`WaterTemp`）。
 
-`agri-temp-wifi` の **PoE 派生**。あちらが WiFi だったのは ATOM U に PoE ベースが
+`agri-temp-wifi` の **PoE 派生**。あちらが WiFi だったのは [ATOM U](https://docs.m5stack.com/en/core/ATOM%20U) に PoE ベースが
 履けないからで、**AtomS3 Lite は Atomic PoE ベースに載る**ため、この機は他の
 `-poe` ノード（env / rain / flow / solar）と同じく **`agri-node-poe-core`** の上に立つ。
 持ち込んだ資産は `agri-temp-wifi` の核心 = **DS18B20 のスロットモデル**
@@ -24,7 +24,7 @@ M5Stack **AtomS3 Lite** ＋ **Atomic PoE Base（K139, W5500）** ＋ **DS18B20 �
 
 ## 配線
 
-Grove ユニット（Switch Science 10979 / DS18B20 防水プローブ・2m・**プルアップ内蔵**）を
+Grove ユニット（[Switch Science 10979](https://www.switch-science.com/products/10979) / DS18B20 防水プローブ・2m・**プルアップ内蔵**）を
 AtomS3 の Grove ポートに挿すだけ。**外付け 4.7k は不要**（agri-temp-wifi との最大の差）。
 
 ```
