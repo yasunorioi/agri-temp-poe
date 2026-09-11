@@ -173,6 +173,7 @@ IP が不明）が起動後 ~15 秒続くと、自動で **provisioning SoftAP**
 | `GET /api/config` | 共通設定 JSON（スロットは `/api/status` 側） |
 | `POST /api/ota` | multipart ファーム更新 |
 | `GET /ota` / `POST /api/check` / `POST /api/update` | GitHub Release セルフ更新（半自動） |
+| `POST /api/reboot` | ネットワーク越しの再起動（`/ota` ページの Reboot ボタン）。設定は NVS なので保持 |
 
 > DATA ピン変更は**再起動せず**バスを張り替える（`sensorsRebind`）。バス再列挙は 60 秒ごと＋
 > 設定保存時にも走るので、旧 wifi 機にあった「Rescan」ボタンは省略。

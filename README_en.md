@@ -137,6 +137,7 @@ blue=boot / red=no link / **purple=empty bus (no DS18B20 detected)** / orange=MQ
 | `GET /api/config` | common config JSON (slots are under `/api/status`) |
 | `POST /api/ota` | multipart firmware update |
 | `GET /ota` / `POST /api/check` / `POST /api/update` | GitHub Release self-update (semi-automatic) |
+| `POST /api/reboot` | Reboot over the network (Reboot button on `/ota`). Settings survive (NVS) |
 
 > Changing the DATA pin re-inits the bus **without a reboot** (`sensorsRebind`). Bus re-enumeration runs every 60 s and on config save, so the "Rescan" button from the old WiFi node is dropped.
 
