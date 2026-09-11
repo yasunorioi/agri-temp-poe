@@ -91,7 +91,11 @@ pio run -e m5atoms3-poe -t upload  # USB flash (first time only); port auto-dete
 - The AtomS3 Lite has no USB-UART chip; Serial is the **ESP32-S3 native USB CDC** (VID 0x303a). Hence `-DARDUINO_USB_CDC_ON_BOOT=1` (classic ATOM nodes set it to 0).
 - USB flash is first-time only. After that, OTA over Ethernet (`curl` is `curl.exe` on Windows):
   ```bash
-  curl -F firmware=@.pio/build/m5atoms3-poe/firmware.bin http://agri-temp-poe-01.local/api/ota
+  # Raw body. core's handleOtaUpload streams the body straight into Update,
+  # so multipart (curl -F) writes the MIME headers into flash and corrupts it.
+  curl --data-binary @.pio/build/m5atoms3-poe/firmware.bin \
+       -H "Content-Type: application/octet-stream" \
+       http://agri-temp-poe-01.local/api/ota
   ```
 
 > 🛠 **Build environment (shared Windows / Linux) and Linux first-time setup (udev / pipx / not sharing `~/.platformio`)** → see the fleet-wide primary reference:

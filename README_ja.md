@@ -119,7 +119,11 @@ pio run -e m5atoms3-poe -t upload  # USB 書き込み(初回のみ)。ポート�
   （VID 0x303a）。`-DARDUINO_USB_CDC_ON_BOOT=1`（旧 ATOM 機は 0）。
 - USB 書き込みは初回だけ。以後は Ethernet 経由 OTA（`curl` は Win では `curl.exe`）:
   ```bash
-  curl -F firmware=@.pio/build/m5atoms3-poe/firmware.bin http://agri-temp-poe-01.local/api/ota
+  # 生ボディ。core の handleOtaUpload は body をそのまま Update に流すので
+  # multipart (curl -F) を送るとヘッダごと書き込まれてイメージが壊れる。
+  curl --data-binary @.pio/build/m5atoms3-poe/firmware.bin \
+       -H "Content-Type: application/octet-stream" \
+       http://agri-temp-poe-01.local/api/ota
   ```
 
 > 🛠 **ビルド環境（Windows / Linux 共用）・Linux 初回セットアップ（udev / pipx /
@@ -186,12 +190,17 @@ Release を確認し、新しければ Dashboard にバナー＋「Update」。�
 
 ```bash
 pio run -e m5atoms3-poe
-# asset 名は gh の path#name 記法で固定（Copy-Item 不要・Win/Linux 共通）
-gh release create v0.1.0 ".pio/build/m5atoms3-poe/firmware.bin#agri-temp-poe.bin" \
-  --title v0.1.0 --notes "..."
+# ⚠️ gh の `path#name` は **表示ラベル**を付けるだけで asset 名は変わらない
+#    (firmware.bin のまま上がって、デバイスは agri-temp-poe.bin を探して 404 する)。
+#    正しい名前のファイルを作ってから upload する。
+cp .pio/build/m5atoms3-poe/firmware.bin agri-temp-poe.bin
+gh release create v0.1.0 --title v0.1.0 --notes "..."
+gh release upload v0.1.0 agri-temp-poe.bin
 ```
 
 - タグ = `v` + `FW_VERSION`（`main.cpp`）/ asset 名 = `agri-temp-poe.bin` と完全一致
+- 上げた直後は匿名の `releases/download/...` が 1〜2 分ほど 404 を返す（CDN 反映待ち）。
+  `gh release download` は認証付きなので即通る。焦って作り直さないこと。
   （`#agri-temp-poe.bin` がこれを保証）
 
 ## 残作業
