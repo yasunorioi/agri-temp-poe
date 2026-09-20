@@ -195,7 +195,7 @@ IP が不明）が起動後 ~15 秒続くと、自動で **provisioning SoftAP**
 | `GET /config`・`POST /config` | 設定フォーム（共通＋スロット） |
 | `GET /api/status` | 共通（fw/ip/link/mqtt/ccm/uptime/ota）＋ `ow_pin`/`bus_ok`/`probe_count`/`probes[]`/`slots[]` |
 | `GET /api/config` | 共通設定 JSON（スロットは `/api/status` 側） |
-| `POST /api/ota` | multipart ファーム更新 |
+| `POST /api/ota` | ファーム更新。**生ボディ**（`--data-binary`）。multipart を送るとヘッダごと書き込まれてイメージが壊れる |
 | `GET /ota` / `POST /api/check` / `POST /api/update` | GitHub Release セルフ更新（半自動） |
 | `POST /api/reboot` | ネットワーク越しの再起動（`/ota` ページの Reboot ボタン）。設定は NVS なので保持 |
 

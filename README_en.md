@@ -159,7 +159,7 @@ blue=boot / red=no link / **purple=empty bus (no DS18B20 detected)** / orange=MQ
 | `GET /config` · `POST /config` | Settings form (common + slots) |
 | `GET /api/status` | common (fw/ip/link/mqtt/ccm/uptime/ota) + `ow_pin`/`bus_ok`/`probe_count`/`probes[]`/`slots[]` |
 | `GET /api/config` | common config JSON (slots are under `/api/status`) |
-| `POST /api/ota` | multipart firmware update |
+| `POST /api/ota` | Firmware update. **Raw body** (`--data-binary`) — sending multipart writes the MIME headers into flash and corrupts the image |
 | `GET /ota` / `POST /api/check` / `POST /api/update` | GitHub Release self-update (semi-automatic) |
 | `POST /api/reboot` | Reboot over the network (Reboot button on `/ota`). Settings survive (NVS) |
 
