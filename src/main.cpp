@@ -40,7 +40,7 @@
 #include "ccm_pub.h"
 
 const char *FW_NAME     = "agri-temp-poe";
-const char *FW_VERSION  = "0.3.0";
+const char *FW_VERSION  = "0.3.1";
 // GitHub release self-update (core AgriOTA). The tag must be vX.Y.Z and the
 // release asset must be named exactly FW_BIN_NAME, or the device finds the tag
 // but 404s on the download.
