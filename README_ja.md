@@ -3,7 +3,8 @@
 **日本語** · [🇬🇧 English](README_en.md)
 
 M5Stack [**AtomS3 Lite**](https://docs.m5stack.com/en/core/AtomS3%20Lite) ＋ [**Atomic PoE Base（K139, W5500）**](https://docs.m5stack.com/en/atom/Atomic%20PoE%20Base) ＋ **DS18B20 × N**（1-Wire マルチドロップ）
-の多点温度ノード。`agri-*` ファミリーの **PoE 機**。既定は house2 の水温（`WaterTemp`）。
+の多点温度ノード。`agri-*` ファミリーの **PoE 機**。
+**MQTT トピックに既定値は無い**（v0.3.0〜）。設置時に必ず命名する — 理由は下記「初回セットアップ」。
 
 `agri-temp-wifi` の **PoE 派生**。あちらが WiFi だったのは [ATOM U](https://docs.m5stack.com/en/core/ATOM%20U) に PoE ベースが
 履けないからで、**AtomS3 Lite は Atomic PoE ベースに載る**ため、この機は他の
@@ -84,8 +85,8 @@ W5500 構成（clk05/cs06/miso07/mosi08）と一致。別のベース/配線に�
 多いのでフル指定）。
 
 ```
-agriha/2/sensor/WaterTemp      {"value":21.44,"unit":"C","ts":1788334103}
-agriha/2/sensor/WaterTemp/2    {"value":19.80,"unit":"C","ts":1788334103}
+agriha/farm/sensor/WaterTempTank  {"value":24.12,"unit":"C","ts":1789881535}
+agriha/2/sensor/WaterTempNear     {"value":19.80,"unit":"C","ts":1788334103}
 agriha/2/sys/temp_poe_01/online   1 / 0  (LWT, retain — core が付与)
 ```
 
@@ -139,7 +140,26 @@ pio run -e m5atoms3-poe -t upload  # USB 書き込み(初回のみ)。ポート�
    - **緑にならない/赤のまま**なら W5500 の配線を疑う（上記ピン節）
 3. `http://agri-temp-poe-01.local/` を開く
 4. `/config` で MQTT Host（`yasu-hp.local`）とスロットを設定
-5. Dashboard に温度 → broker で `agriha/2/sensor/WaterTemp` を確認
+   - **topic を入れるまで MQTT には何も出ない**（v0.3.0〜、既定は空）。
+     Dashboard に温度は出るが「not set / nothing is being published」と警告が出る。
+     故障ではなく、名前を決めるまで publish しない設計
+   - `/config` の Slots の上に**命名例の表**を出してある。topic 欄にも薄字で例が出る
+     （placeholder なので**送信されない**）
+
+```
+agriha/farm/sensor/WaterTempTank     No.2/No.3 共用の給水タンク
+agriha/1/sensor/WaterTempTap         house1 蛇口
+agriha/2/sensor/WaterTempNear        house2 近側
+agriha/2/sensor/WaterTempPump        house2 ポンプ
+agriha/3/sensor/WaterTempFar         house3 遠側
+```
+
+   形は `agriha/<scope>/<category>/<Type><descriptor>`。`scope` はハウス番号、
+   複数ハウスで共用する対象なら `farm`。**素の `WaterTemp` や `/2` のような番号は使わない**
+   （以前は素の `WaterTemp` が既定だったため、全ノードが同じ名前に着地して
+   互いの履歴系列に書き込む事故が起きた。2026-09-20 に 566 サンプルを手で削除している）。
+   正準仕様は [`Arsprout-RESTAPI/mqtt-topics.md`](https://github.com/yasunorioi/Arsprout-RESTAPI/blob/main/mqtt-topics.md) §0.3.1 / §0.6
+5. Dashboard に温度 → broker で設定したトピックを確認
 
 > **複数台（4台）を立ち上げるとき**: 既定の hostname / node_id は全台
 > `agri-temp-poe-01` / `temp_poe_01` で同じ。同一 LAN に同時投入すると mDNS 名衝突＋

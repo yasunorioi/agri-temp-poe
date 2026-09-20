@@ -40,7 +40,7 @@
 #include "ccm_pub.h"
 
 const char *FW_NAME     = "agri-temp-poe";
-const char *FW_VERSION  = "0.2.0";
+const char *FW_VERSION  = "0.3.0";
 // GitHub release self-update (core AgriOTA). The tag must be vX.Y.Z and the
 // release asset must be named exactly FW_BIN_NAME, or the device finds the tag
 // but 404s on the download.
@@ -92,8 +92,14 @@ static String esc(const char *v) {
   s.replace("'", "&#39;"); s.replace("\"", "&quot;");
   return s;
 }
-static String inTxt(const String &name, const String &val, const char *type = "text") {
-  return "<input type=" + String(type) + " name='" + name + "' value='" + val + "'>";
+// `ph` renders as a placeholder: grey sample text showing the shape of a valid
+// value. It vanishes when the operator types and is NEVER submitted, so an empty
+// field stays empty. Used for the slot topics, which have no default any more.
+static String inTxt(const String &name, const String &val, const char *type = "text",
+                    const char *ph = nullptr) {
+  String s = "<input type=" + String(type) + " name='" + name + "' value='" + val + "'";
+  if (ph && *ph) { s += " placeholder='"; s += ph; s += "'"; }
+  return s + ">";
 }
 
 // <select> of every ROM currently on the bus, plus whatever this slot already
@@ -127,6 +133,7 @@ static String renderDashboardSensors() {
   s = F("<h3>Temperature</h3><table>"
         "<tr><th>Slot</th><th>Label</th><th>ROM</th><th>Temp</th><th>Topic</th></tr>");
   bool anySlot = false;
+  int  noTopic  = 0;
   for (int i = 0; i < CFG_MAX_SLOTS; i++) {
     const SlotConfig &sl = g_cfg.slot[i];
     if (!sl.rom[0]) continue;
@@ -135,10 +142,24 @@ static String renderDashboardSensors() {
     s += "</td><td style='font-family:monospace;font-size:12px'>"; s += sl.rom; s += "</td><td>";
     if (g_slotOk[i]) { s += "<span style='color:#3fb950'>"; s += String(g_slotTemp[i], 2); s += " &deg;C</span>"; }
     else             { s += F("<span style='color:#e05252'>-- (no reading)</span>"); }
-    s += "</td><td>"; s += esc(sl.topic); s += "</td></tr>";
+    s += "</td><td>";
+    if (sl.topic[0]) s += esc(sl.topic);
+    else { s += F("<span style='color:#e8a33d'>not set</span>"); noTopic++; }
+    s += "</td></tr>";
   }
   if (!anySlot) s += F("<tr><td colspan=5 style='color:#e8a33d'>No probe bound yet — see Config</td></tr>");
   s += F("</table>");
+
+  // A bound probe with no topic is the expected state of a freshly flashed node
+  // (config.h leaves the topic empty on purpose). Say so, or the node reads fine
+  // on this page while publishing nothing and looks broken.
+  if (noTopic) {
+    s += F("<p style='color:#e8a33d'><b>");
+    s += noTopic;
+    s += F(" probe(s) have no MQTT topic — nothing is being published.</b><br>"
+           "Set one in <a href='/config' style='color:#d0d6e0'>Config</a> "
+           "(worked examples are shown there).</p>");
+  }
 
   // Probes physically on the bus that no slot claims: the thing you actually
   // want to see right after adding or swapping a sensor.
@@ -183,8 +204,31 @@ static String renderConfigSensorRows() {
   hdr("Slots — bind a probe (ROM) to a slot");
   s += F("<tr><td colspan=2>"
          "<p style='color:#999;margin:4px 0'>Empty ROM = slot inactive. "
-         "Empty Topic = not published. Empty CCM識別子 = no CCM for that slot. "
+         "Empty Topic = <b>not published</b> — a slot with no topic is silent on "
+         "purpose. Empty CCM識別子 = no CCM for that slot. "
          "room / region / priority / ノード種別 are shared (set above under UECS-CCM).</p>"
+         // There is deliberately no default topic, so the field starts blank.
+         // A blank box with no clue is its own trap: show the names actually
+         // in use across the fleet, outside the form.
+         "<p style='color:#e8a33d;margin:4px 0'>MQTT topic has no default — name it "
+         "when you install the node. Shape: <code>agriha/&lt;scope&gt;/&lt;category&gt;/"
+         "&lt;Type&gt;&lt;descriptor&gt;</code></p>"
+         "<table><tr><th>命名例（現用）</th><th>実体</th></tr>"
+         "<tr><td style='font-family:monospace;font-size:12px'>agriha/farm/sensor/WaterTempTank</td>"
+             "<td>No.2/No.3 共用の給水タンク</td></tr>"
+         "<tr><td style='font-family:monospace;font-size:12px'>agriha/1/sensor/WaterTempTap</td>"
+             "<td>house1 蛇口</td></tr>"
+         "<tr><td style='font-family:monospace;font-size:12px'>agriha/2/sensor/WaterTempNear</td>"
+             "<td>house2 近側</td></tr>"
+         "<tr><td style='font-family:monospace;font-size:12px'>agriha/2/sensor/WaterTempPump</td>"
+             "<td>house2 ポンプ</td></tr>"
+         "<tr><td style='font-family:monospace;font-size:12px'>agriha/3/sensor/WaterTempFar</td>"
+             "<td>house3 遠側</td></tr>"
+         "</table>"
+         "<p style='color:#999;margin:4px 0'><code>scope</code> はハウス番号、"
+         "複数ハウスで共用する対象なら <code>farm</code>。必ず descriptor を付け、"
+         "素の型名（<code>WaterTemp</code>）やインスタンス番号（<code>WaterTemp/2</code>）は"
+         "使わない — mqtt-topics.md &sect;0.3.1。</p>"
          "<table><tr><th>#</th><th>ROM</th><th>Label</th><th>MQTT topic</th>"
          "<th>CCM識別子</th><th>order</th><th>offset &deg;C</th></tr>");
   for (int i = 0; i < CFG_MAX_SLOTS; i++) {
@@ -192,7 +236,8 @@ static String renderConfigSensorRows() {
     String p = "s" + String(i);
     s += "<tr><td>"; s += i; s += "</td><td>"; s += romSelect(i); s += "</td>";
     s += "<td>" + inTxt(p + "lab", esc(sl.label))    + "</td>";
-    s += "<td>" + inTxt(p + "top", esc(sl.topic))    + "</td>";
+    s += "<td>" + inTxt(p + "top", esc(sl.topic), "text",
+                        "agriha/farm/sensor/WaterTempTank") + "</td>";
     s += "<td>" + inTxt(p + "typ", esc(sl.ccm_type)) + "</td>";
     s += "<td>" + inTxt(p + "or",  String(sl.ccm_order), "number") + "</td>";
     s += "<td>" + inTxt(p + "off", String(sl.offset_c, 2)) + "</td></tr>";

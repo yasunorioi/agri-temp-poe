@@ -2,7 +2,7 @@
 
 [🇯🇵 日本語](README_ja.md) · **English**
 
-A multi-point temperature node built from an M5Stack [**AtomS3 Lite**](https://docs.m5stack.com/en/core/AtomS3%20Lite) + [**Atomic PoE Base (K139, W5500)**](https://docs.m5stack.com/en/atom/Atomic%20PoE%20Base) + **DS18B20 × N** (1-Wire multi-drop). The **PoE member** of the `agri-*` family. Default target is house 2 water temperature (`WaterTemp`).
+A multi-point temperature node built from an M5Stack [**AtomS3 Lite**](https://docs.m5stack.com/en/core/AtomS3%20Lite) + [**Atomic PoE Base (K139, W5500)**](https://docs.m5stack.com/en/atom/Atomic%20PoE%20Base) + **DS18B20 × N** (1-Wire multi-drop). The **PoE member** of the `agri-*` family. **MQTT topics have no default** (v0.3.0 onwards) — name them when you install the node; see First-time setup.
 
 A **PoE derivative of `agri-temp-wifi`**. That node was WiFi only because the [ATOM U](https://docs.m5stack.com/en/core/ATOM%20U) cannot sit on a PoE base; the **AtomS3 Lite does sit on the Atomic PoE base**, so this node stands on **`agri-node-poe-core`** like the other `-poe` nodes (env / rain / flow / solar). What carried over from `agri-temp-wifi` is its core asset — the **DS18B20 slot model** (`config.h` / `sensors.h`).
 
@@ -63,8 +63,8 @@ They are passed via the `-DW5500_*` build flags in `platformio.ini`, matching a 
 Per slot, **one measurand = one topic**, `retain`ed. Each slot holds its topic as a **full path** (rather than env-poe's `<prefix>/sensor/<Type>`), because multi-point temperature often wants to publish to unrelated topics.
 
 ```
-agriha/2/sensor/WaterTemp      {"value":21.44,"unit":"C","ts":1788334103}
-agriha/2/sensor/WaterTemp/2    {"value":19.80,"unit":"C","ts":1788334103}
+agriha/farm/sensor/WaterTempTank  {"value":24.12,"unit":"C","ts":1789881535}
+agriha/2/sensor/WaterTempNear     {"value":19.80,"unit":"C","ts":1788334103}
 agriha/2/sys/temp_poe_01/online   1 / 0  (LWT, retain — added by core)
 ```
 
@@ -110,7 +110,27 @@ Measured: RAM 11.1% / Flash 29.8% (994 KB, pioarduino fork = arduino-esp32 3.x).
    - **Stays red / never turns green** → suspect the W5500 wiring (pin section above)
 3. Open `http://agri-temp-poe-01.local/`
 4. In `/config` set the MQTT Host (`yasu-hp.local`) and the slots
-5. Temperature appears on the Dashboard → confirm `agriha/2/sensor/WaterTemp` on the broker
+   - **Nothing is published until you set a topic** (v0.3.0 onwards; the default is empty).
+     The Dashboard still shows the temperature, with a "not set / nothing is being published"
+     warning. That is deliberate, not a fault: the node stays off the broker until it is named.
+   - `/config` shows a table of **worked examples** above the Slots table, and the topic field
+     carries a greyed example as a placeholder (so it is **never submitted**):
+
+```
+agriha/farm/sensor/WaterTempTank     No.2/No.3 shared supply tank (house 2 + 3)
+agriha/1/sensor/WaterTempTap         house1 tap
+agriha/2/sensor/WaterTempNear        house2 near side
+agriha/2/sensor/WaterTempPump        house2 pump
+agriha/3/sensor/WaterTempFar         house3 far side
+```
+
+   The shape is `agriha/<scope>/<category>/<Type><descriptor>`. `scope` is the house number,
+   or `farm` when two or more houses share the thing being measured. **Never the bare type
+   (`WaterTemp`) and never an instance number (`WaterTemp/2`)** — that default used to land
+   every node on the same name, and nodes wrote into each other's history series until
+   566 samples had to be deleted by hand on 2026-09-20. Canonical rules:
+   [`Arsprout-RESTAPI/mqtt-topics.md`](https://github.com/yasunorioi/Arsprout-RESTAPI/blob/main/mqtt-topics.md) §0.3.1 / §0.6
+5. Temperature appears on the Dashboard → confirm the topic you configured on the broker
 
 > **When bringing up multiple units (4):** the default hostname / node_id are the same on every unit (`agri-temp-poe-01` / `temp_poe_01`). Dropping them onto the same LAN at once causes an mDNS name clash plus an MQTT client-id clash (same node_id → the broker kicks one off). **Flash one at a time and give each a unique hostname and node_id in `/config`** (e.g. `-01`…`-04`) before connecting the next. The house assignment (topic prefix) can stay at the default house 2.
 
